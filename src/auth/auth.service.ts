@@ -1,9 +1,11 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import * as cryptoRandomString from 'crypto-random-string';
 import { UserService } from '../user/user.service';
 import { User } from '../user/user.entity';
 import { VerificationService } from '../verification/verification.service';
-import { VerificationData, VerificationCodeTTL } from '../verification/verification.interface';
+import { VerificationCodeTTL } from '../verification/verification.interface';
+import { comparePassword } from '../utils/helpers/decryptPassword';
 
 @Injectable()
 export class AuthService {
@@ -15,8 +17,9 @@ export class AuthService {
 
   async validateUser(login: string, password: string): Promise<User> {
     const user = await this.userService.findUserByLogin(login);
+    const isPasswordMatch = await comparePassword(password, user.password);
 
-    if (user && user.password === password) {
+    if (isPasswordMatch) {
       return user;
     }
 
@@ -24,7 +27,7 @@ export class AuthService {
   }
 
   async loginUser(id: number) {
-    const CODE = '1234';
+    const CODE = cryptoRandomString({ length: 4, type: 'numeric' });
     const user = await this.userService.findUserById(id);
 
     if (!user) {
@@ -32,15 +35,19 @@ export class AuthService {
     }
 
     const token = this.jwtService.sign({ id });
-    const { code } = await this.verificationService.createCode(user, CODE, VerificationCodeTTL.DEFAULT);
+
+    const { code } = await this.verificationService.createCode(
+      user,
+      CODE,
+      VerificationCodeTTL.DEFAULT,
+    );
 
     return { code, token };
   }
 
-  async check2fa(userId: string, data: VerificationData) {
-    const { code, type } = data;
-    const user = await this.userService.findUserById(+userId);
-    const verification = await this.verificationService.findCodeByUserIdAndType(userId, type);
+  async check2fa(userId: number, code: string) {
+    const user = await this.userService.findUserById(userId);
+    const verification = await this.verificationService.findCodeByUserId(userId);
 
     if (!user || !verification) {
       throw new NotFoundException();

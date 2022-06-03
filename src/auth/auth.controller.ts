@@ -16,7 +16,7 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Post('2fa')
-  validate(@User() userId, @Body() data) {
-    return this.authService.check2fa(userId, data);
+  validate(@User() userId, @Body() { code }) {
+    return this.authService.check2fa(userId, code);
   }
 }

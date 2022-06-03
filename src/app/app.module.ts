@@ -6,11 +6,6 @@ import { VerificationModule } from 'src/verification/verification.module';
 import ormConfig from 'src/ormconfig';
 
 @Module({
-  imports: [
-    TypeOrmModule.forRoot(ormConfig),
-    UserModule,
-    AuthModule,
-    VerificationModule,
-  ],
+  imports: [TypeOrmModule.forRoot(ormConfig), UserModule, AuthModule, VerificationModule],
 })
 export class AppModule {}

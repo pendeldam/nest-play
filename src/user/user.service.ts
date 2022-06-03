@@ -32,10 +32,10 @@ export class UserService {
       throw new HttpException('Such login already exist', HttpStatus.BAD_REQUEST);
     }
 
-    const { password } = createUserDto;
+    const { login, password, email } = createUserDto;
     const hash = await hashPassword(password);
 
-    const user = this.userRepository.create({ password: hash, ...createUserDto });
+    const user = this.userRepository.create({ password: hash, login, email });
     await this.userRepository.save(user);
 
     return user;
