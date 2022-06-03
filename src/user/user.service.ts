@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './user.entity';
@@ -21,15 +21,21 @@ export class UserService {
     return this.userRepository.findOne(id);
   }
 
-  findUserByLogin(login: string): Promise<User> {
+  async findUserByLogin(login: string): Promise<User> {
     return this.userRepository.findOne({ where: { login } });
   }
 
   async createUser(createUserDto: CreateUserDto): Promise<User> {
-    const { login, password, email } = createUserDto;
+    const isUserLoginExist = await this.findUserByLogin(createUserDto.login);
+
+    if (isUserLoginExist) {
+      throw new HttpException('Such login already exist', HttpStatus.BAD_REQUEST);
+    }
+
+    const { password } = createUserDto;
     const hash = await hashPassword(password);
 
-    const user = this.userRepository.create({ login, password: hash, email });
+    const user = this.userRepository.create({ password: hash, ...createUserDto });
     await this.userRepository.save(user);
 
     return user;
@@ -39,7 +45,7 @@ export class UserService {
     const user = await this.findUserById(id);
 
     if (!user) {
-      throw new NotFoundException();
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
 
     await this.userRepository.update(id, updateUserDto);
@@ -51,7 +57,7 @@ export class UserService {
     const user = await this.findUserById(id);
 
     if (!user) {
-      throw new NotFoundException();
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
 
     await this.userRepository.delete(id);
