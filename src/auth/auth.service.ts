@@ -6,6 +6,7 @@ import { User } from '../user/user.entity';
 import { VerificationService } from '../verification/verification.service';
 import { VerificationCodeTTL } from '../verification/verification.interface';
 import { comparePassword } from '../utils/helpers/decryptPassword';
+import { MailService } from '../mailer/mail.service';
 
 @Injectable()
 export class AuthService {
@@ -13,6 +14,7 @@ export class AuthService {
     private userService: UserService,
     private jwtService: JwtService,
     private verificationService: VerificationService,
+    private mailService: MailService,
   ) {}
 
   async validateUser(login: string, password: string): Promise<User> {
@@ -41,6 +43,8 @@ export class AuthService {
       CODE,
       VerificationCodeTTL.DEFAULT,
     );
+
+    await this.mailService.send(user.email, code);
 
     return { code, token };
   }

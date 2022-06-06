@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { UserModule } from 'src/user/user.module';
+import { MailModule } from '../mailer/mail.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { VerificationModule } from '../verification/verification.module';
@@ -12,6 +13,7 @@ import { jwtOptions } from '../strategy/jwt.config';
 @Module({
   imports: [
     UserModule,
+    MailModule,
     VerificationModule,
     PassportModule,
     JwtModule.register({
